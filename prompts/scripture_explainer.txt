@@ -1,0 +1,16 @@
+# Category A: Bhagavad Gita & Scripture Explainer Prompt Template
+
+Target Objective:
+Explain a specific shloka or philosophical concept from authentic scripture (Bhagavad Gita, Upanishads) in simple Hindi/English with practical life application.
+
+Requirements:
+1. Exact citation (Chapter number and Verse number).
+2. Sanskrit verse quotation (must be verifiable against classical editions).
+3. Clear distinction between:
+   - Original Sanskrit text
+   - Exact translation
+   - Philosophical interpretation
+   - Practical modern takeaway
+4. Opening hook must be informative and truthful (no clickbait, no fear of curses).
+5. Respectful depiction in vertical 9:16 portrait composition.
+6. Target duration: 30-45 seconds.

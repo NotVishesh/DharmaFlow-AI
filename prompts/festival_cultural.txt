@@ -1,0 +1,10 @@
+# Category D: Festivals & Cultural Observances Prompt Template
+
+Target Objective:
+Explain the origin, spiritual significance, and practices of a Hindu festival or observance (e.g. Diwali, Navaratri, Shivaratri, Ekadashi).
+
+Requirements:
+1. Verify lunar dates and regional calendar variations with trusted almanacs (Drik Panchang).
+2. Distinguish traditional Puranic lore from modern folk customs.
+3. Highlight universal spiritual meaning (victory of light, devotion, self-discipline).
+4. No commercialized or sensationalized superstition.

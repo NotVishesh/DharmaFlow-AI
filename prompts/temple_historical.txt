@@ -1,0 +1,10 @@
+# Category E: Temple & Historical Architecture Prompt Template
+
+Target Objective:
+Explain the history, iconography, sacred geometry, or architecture of historic Hindu temples.
+
+Requirements:
+1. Verify historical claims against credible academic or epigraphical sources (inscriptions, dynasty dates).
+2. Distinguish traditional Sthala Puranas (sacred geography legends) from archaeological evidence.
+3. Respectful architectural visuals representing classical Shilpa Shastra proportions.
+4. Do not fabricate ceremonies, secret chambers, or sensational claims.

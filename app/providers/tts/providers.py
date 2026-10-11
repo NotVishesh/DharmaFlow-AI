@@ -1,0 +1,227 @@
+"""
+DharmaFlow AI — TTS Provider Interface
+Supports gTTS (free online), edge-tts (Microsoft, free), Piper (local), and Kokoro (local).
+"""
+from __future__ import annotations
+
+import logging
+import subprocess
+import tempfile
+from abc import ABC, abstractmethod
+from pathlib import Path
+from typing import Optional
+
+logger = logging.getLogger(__name__)
+
+
+class TTSProvider(ABC):
+    """Abstract text-to-speech interface."""
+
+    @abstractmethod
+    def synthesize(self, text: str, output_path: Path, speed: float = 1.0) -> Path:
+        """Synthesize speech and write to output_path. Returns the output path."""
+        ...
+
+    @abstractmethod
+    def is_available(self) -> bool:
+        ...
+
+    def estimate_duration(self, text: str, language: str = "hi") -> float:
+        """Rough estimate of speech duration in seconds."""
+        words = len(text.split())
+        # ~130 words/min for Hindi, ~150 for English
+        wpm = 120 if language in ("hi", "hi-en") else 145
+        return (words / wpm) * 60
+
+
+class GTTSProvider(TTSProvider):
+    """
+    Google Text-to-Speech (gTTS) — free, requires internet.
+    License: Free for personal and commercial use.
+    Voice is not cloned from any real person.
+    """
+
+    def __init__(self, language: str = "hi", slow: bool = False):
+        self.language = language
+        self.slow = slow
+
+    def is_available(self) -> bool:
+        try:
+            import gtts  # noqa
+            return True
+        except ImportError:
+            return False
+
+    def synthesize(self, text: str, output_path: Path, speed: float = 1.0) -> Path:
+        try:
+            from gtts import gTTS
+        except ImportError:
+            raise RuntimeError("gtts not installed. Run: pip install gtts")
+
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # gTTS outputs MP3; convert to WAV if needed
+        mp3_path = output_path.with_suffix(".mp3")
+        tts = gTTS(text=text, lang=self.language, slow=self.slow)
+        tts.save(str(mp3_path))
+
+        if output_path.suffix.lower() == ".wav":
+            _convert_to_wav(mp3_path, output_path, speed=speed)
+            mp3_path.unlink(missing_ok=True)
+        else:
+            mp3_path.rename(output_path)
+
+        if not output_path.exists() or output_path.stat().st_size < 1000:
+            raise RuntimeError(f"TTS output is empty or missing: {output_path}")
+
+        logger.info("gTTS synthesized: %s (%.1f KB)", output_path.name, output_path.stat().st_size / 1024)
+        return output_path
+
+
+class EdgeTTSProvider(TTSProvider):
+    """
+    Microsoft Edge TTS — free, requires internet, high quality.
+    Voice: hi-IN-SwaraNeural (Hindi), en-IN-NeerjaNeural (Indian English).
+    License: Free for use; not a voice clone of any real person.
+    """
+
+    def __init__(self, voice: str = "hi-IN-SwaraNeural"):
+        self.voice = voice
+
+    def is_available(self) -> bool:
+        try:
+            import edge_tts  # noqa
+            return True
+        except ImportError:
+            return False
+
+    def synthesize(self, text: str, output_path: Path, speed: float = 1.0) -> Path:
+        try:
+            import asyncio
+            import edge_tts
+        except ImportError:
+            raise RuntimeError("edge-tts not installed. Run: pip install edge-tts")
+
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # edge-tts natively writes MP3; convert if WAV requested
+        mp3_path = output_path.with_suffix(".mp3")
+
+        async def _synth():
+            communicate = edge_tts.Communicate(text, self.voice)
+            await communicate.save(str(mp3_path))
+
+        asyncio.run(_synth())
+
+        if output_path.suffix.lower() == ".wav":
+            _convert_to_wav(mp3_path, output_path, speed=speed)
+            mp3_path.unlink(missing_ok=True)
+        else:
+            mp3_path.rename(output_path)
+
+        if not output_path.exists() or output_path.stat().st_size < 1000:
+            raise RuntimeError(f"EdgeTTS output is empty: {output_path}")
+
+        logger.info("EdgeTTS synthesized: %s", output_path.name)
+        return output_path
+
+
+class PiperTTSProvider(TTSProvider):
+    """
+    Piper TTS — local, offline, high-quality VITS-based voices.
+    License: MIT (engine). Voice model licenses vary — verify before use.
+    See: https://github.com/rhasspy/piper
+    """
+
+    def __init__(self, model_path: str, voice: str = ""):
+        self.model_path = Path(model_path) if model_path else None
+        self.voice = voice
+
+    def is_available(self) -> bool:
+        if not self.model_path or not self.model_path.exists():
+            return False
+        result = subprocess.run(["piper", "--version"], capture_output=True, text=True)
+        return result.returncode == 0
+
+    def synthesize(self, text: str, output_path: Path, speed: float = 1.0) -> Path:
+        if not self.is_available():
+            raise RuntimeError(
+                "Piper TTS is not available. Install piper and set PIPER_MODEL_PATH in config."
+            )
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        cmd = [
+            "piper",
+            "--model", str(self.model_path),
+            "--output_file", str(output_path),
+        ]
+        result = subprocess.run(cmd, input=text, capture_output=True, text=True)
+        if result.returncode != 0:
+            raise RuntimeError(f"Piper failed: {result.stderr}")
+        return output_path
+
+
+class SilentFallbackProvider(TTSProvider):
+    """
+    Emergency fallback: generates a silent WAV. Used only for rendering tests.
+    Never use for actual content publishing.
+    """
+
+    def __init__(self, duration_seconds: float = 10.0):
+        self.duration_seconds = duration_seconds
+
+    def is_available(self) -> bool:
+        return True
+
+    def synthesize(self, text: str, output_path: Path, speed: float = 1.0) -> Path:
+        logger.warning("Using test audio fallback TTS — this output is for testing only!")
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        estimated = self.estimate_duration(text)
+        _generate_silence_wav(output_path, duration=estimated)
+        return output_path
+
+
+def _convert_to_wav(mp3_path: Path, wav_path: Path, speed: float = 1.0) -> None:
+    """Use FFmpeg to convert MP3 to WAV with optional speed adjustment."""
+    filters = f"atempo={speed}" if speed != 1.0 else "anull"
+    cmd = [
+        "ffmpeg", "-y", "-i", str(mp3_path),
+        "-af", filters,
+        "-ar", "22050", "-ac", "1",
+        str(wav_path),
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        raise RuntimeError(f"FFmpeg MP3->WAV conversion failed: {result.stderr[-400:]}")
+
+
+def _generate_silence_wav(path: Path, duration: float, sample_rate: int = 22050) -> None:
+    """Generate a subtle test audio tone WAV file using FFmpeg."""
+    cmd = [
+        "ffmpeg", "-y",
+        "-f", "lavfi", "-i", f"sine=frequency=220:sample_rate={sample_rate}",
+        "-t", f"{duration:.3f}",
+        "-af", "volume=0.05",
+        "-ar", str(sample_rate), "-ac", "1",
+        str(path),
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        raise RuntimeError(f"Failed to generate silence WAV: {result.stderr[-200:]}")
+
+
+def validate_audio_file(path: Path) -> dict:
+    """Use FFprobe to validate an audio file. Returns probe dict."""
+    import json as _json
+    cmd = [
+        "ffprobe", "-v", "quiet", "-print_format", "json",
+        "-show_streams", str(path)
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        raise RuntimeError(f"FFprobe failed on {path}: {result.stderr}")
+    data = _json.loads(result.stdout)
+    streams = data.get("streams", [])
+    audio = [s for s in streams if s.get("codec_type") == "audio"]
+    if not audio:
+        raise ValueError(f"No audio stream in {path}")
+    return data

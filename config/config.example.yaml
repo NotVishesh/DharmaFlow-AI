@@ -1,0 +1,157 @@
+application:
+  env: development           # development | production
+  host: 127.0.0.1
+  port: 8000
+  debug: false
+  secret_key: ""             # override via DHARMAFLOW_SECRET_KEY env var
+  safe_mode: true            # must be true; only disable after full audit
+
+content:
+  timezone: Asia/Kolkata
+  daily_video_limit: 1
+  daily_upload_limit: 1
+  require_human_approval: true
+  default_language: hi       # hi | en | hi-en
+  target_duration_seconds: 45
+  min_duration_seconds: 15
+  max_duration_seconds: 60
+  max_regeneration_attempts: 3
+  category_distribution:
+    scripture_explainer: 0.30
+    epic_storytelling: 0.25
+    devotional_reflection: 0.20
+    festival_cultural: 0.15
+    temple_historical: 0.10
+
+  blocked_topics: []         # list of regex patterns or exact strings
+  review_required_topics:    # patterns triggering mandatory human review
+    - "caste"
+    - "conversion"
+    - "political"
+    - "real person"
+    - "miracle cure"
+
+llm:
+  provider: local            # local | openai | anthropic | gemini
+  local:
+    engine: ollama           # ollama | llama_cpp
+    model: llama3.2:3b
+    base_url: http://localhost:11434
+    temperature: 0.7
+    max_tokens: 4096
+    timeout_seconds: 120
+  openai:
+    model: gpt-4o-mini
+    temperature: 0.7
+    max_tokens: 4096
+  anthropic:
+    model: claude-3-5-haiku-20241022
+    temperature: 0.7
+    max_tokens: 4096
+  gemini:
+    model: gemini-1.5-flash
+    temperature: 0.7
+    max_tokens: 4096
+
+tts:
+  provider: gtts             # gtts | piper | kokoro | edge_tts
+  language: hi
+  speed: 1.0
+  piper:
+    model_path: ""
+    voice: ""
+    sample_rate: 22050
+  kokoro:
+    model_path: ""
+    voice: af_heart
+  edge_tts:
+    voice: hi-IN-SwaraNeural  # Microsoft Edge TTS voice
+  gtts:
+    language: hi
+    slow: false
+  inter_scene_pause_ms: 400
+  output_format: wav
+
+visuals:
+  provider: placeholder      # placeholder | comfyui | stable_diffusion_api
+  comfyui:
+    enabled: false
+    url: http://127.0.0.1:8188
+    workflow_file: workflows/dharma_t2i.json
+    checkpoint: v1-5-pruned-emaonly.safetensors
+    width: 768
+    height: 1344             # ~9:16 for portrait
+    steps: 25
+    cfg_scale: 7.0
+    timeout_seconds: 120
+    max_retries: 3
+  placeholder:
+    enabled: true
+    width: 1080
+    height: 1920
+
+video:
+  width: 1080
+  height: 1920
+  fps: 30
+  codec: libx264
+  audio_codec: aac
+  preset: medium             # ultrafast | fast | medium | slow
+  crf: 23                    # 18=near-lossless, 28=lower quality
+  audio_bitrate: 192k
+  subtitle_font_size: 52
+  subtitle_safe_margin: 100  # pixels from edge
+  ken_burns_enabled: true    # gentle pan/zoom on still images
+  transition_duration: 0.4   # seconds
+  background_music_enabled: false
+  background_music_volume: 0.10
+  intro_seconds: 0           # 0 disables intro card
+  render_presets:
+    draft:
+      preset: ultrafast
+      crf: 35
+      width: 540
+      height: 960
+    standard:
+      preset: medium
+      crf: 23
+    archival:
+      preset: slow
+      crf: 18
+
+storage:
+  output_dir: output
+  logs_dir: logs
+  temp_dir: temp
+  database_url: "sqlite:///./data/dharmaflow.db"
+  max_storage_gb: 50
+  keep_temp_on_error: false
+
+youtube:
+  enabled: false
+  client_secrets_file: config/client_secret.json
+  token_file: config/youtube_token.json
+  default_privacy: private   # private | unlisted | public
+  category_id: "29"          # 29 = Nonprofits & Activism
+  default_language: hi
+  made_for_kids: false
+  notify_subscribers: false
+  upload_chunk_size_mb: 256
+  max_upload_retries: 5
+
+instagram:
+  enabled: false
+  access_token: ""
+  business_account_id: ""
+  max_retries: 3
+
+costs:
+  monthly_api_spend_cap_usd: 10.0   # 0 disables external LLM calls
+  track_compute_time: true
+  alert_on_cap_reached: true
+
+logging:
+  level: INFO
+  max_bytes: 10485760        # 10 MB per file
+  backup_count: 5
+  format: "%(asctime)s [%(levelname)s] %(name)s: %(message)s"

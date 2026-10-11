@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DharmaFlow AI — Hindu Devotional Shorts Factory</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo-area">
+      <div class="logo-icon">🕉️</div>
+      <div class="logo-text">
+        <h1>DharmaFlow AI</h1>
+        <span>Devotional Shorts</span>
+      </div>
+    </div>
+    <ul class="nav-links">
+      <li class="nav-link active" data-tab="overview">📊 Overview</li>
+      <li class="nav-link" data-tab="content-studio">✍️ Content Studio</li>
+      <li class="nav-link" data-tab="video-studio">🎬 Video Studio</li>
+      <li class="nav-link" data-tab="publishing">🚀 Publishing</li>
+      <li class="nav-link" data-tab="analytics">📈 Analytics</li>
+      <li class="nav-link" data-tab="settings">⚙️ Settings & System</li>
+    </ul>
+    <div class="system-status">
+      <span class="badge-online"></span>
+      <span id="system-mode-text">Local Safe Mode Active</span>
+    </div>
+  </aside>
+
+  <!-- Main Content Container -->
+  <main class="main-content">
+    <header class="header">
+      <h2 id="page-title">Overview Dashboard</h2>
+      <div>
+        <button class="btn btn-secondary" onclick="refreshCurrentTab()">🔄 Refresh</button>
+        <button class="btn btn-primary" onclick="showGenerateModal()">⚡ New Video</button>
+      </div>
+    </header>
+
+    <!-- Pane 1: Overview -->
+    <section id="pane-overview" class="content-pane active">
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-title">Content Backlog</div>
+          <div class="kpi-value" id="kpi-ideas">0</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">Completed Renders</div>
+          <div class="kpi-value" id="kpi-completed">0</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">Pending Human Review</div>
+          <div class="kpi-value" id="kpi-pending" style="color: var(--gold);">0</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">Published Videos</div>
+          <div class="kpi-value" id="kpi-published" style="color: var(--accent-green);">0</div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div style="padding: 16px 20px; font-weight: 600;">Recent Pipeline Jobs</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Job ID</th>
+              <th>Status</th>
+              <th>Topic</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="recent-jobs-table">
+            <tr><td colspan="4" style="text-align:center;">Loading jobs...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Pane 2: Content Studio -->
+    <section id="pane-content-studio" class="content-pane">
+      <div class="form-card">
+        <h3 style="margin-bottom: 16px;">Generate New Devotional Script</h3>
+        <div class="form-group">
+          <label>Video Topic / Teaching</label>
+          <input type="text" id="gen-topic" class="form-control" placeholder="e.g. Bhagavad Gita 2:47 Karma Yoga Explained">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Category</label>
+            <select id="gen-category" class="form-control">
+              <option value="scripture_explainer">Scripture Explainer (30%)</option>
+              <option value="epic_storytelling">Epic Storytelling (25%)</option>
+              <option value="devotional_reflection">Devotional Reflection (20%)</option>
+              <option value="festival_cultural">Festival & Cultural (15%)</option>
+              <option value="temple_historical">Temple & Historical (10%)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Language</label>
+            <select id="gen-language" class="form-control">
+              <option value="hi">Hindi (हिंदी)</option>
+              <option value="en">English</option>
+              <option value="hi-en">Hinglish</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Duration (Seconds)</label>
+            <input type="number" id="gen-duration" class="form-control" value="45" min="15" max="60">
+          </div>
+          <div class="form-group">
+            <label>Mode</label>
+            <select id="gen-mode" class="form-control">
+              <option value="demo">Demo Mode (Offline / Fast)</option>
+              <option value="standard">Production (Local AI / GPU)</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="triggerGenerate()">🚀 Launch Generation Pipeline</button>
+      </div>
+
+      <div class="table-card">
+        <div style="padding: 16px 20px; font-weight: 600;">Saved Script Backlog</div>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Topic</th>
+              <th>Category</th>
+              <th>Verification State</th>
+            </tr>
+          </thead>
+          <tbody id="scripts-table">
+            <tr><td colspan="4" style="text-align:center;">Loading scripts...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Pane 3: Video Studio -->
+    <section id="pane-video-studio" class="content-pane">
+      <div id="video-detail-card" class="form-card" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <h3 id="current-job-title">Video Inspection</h3>
+          <div>
+            <button class="btn btn-success" id="btn-approve" onclick="approveJob()">✓ Approve for Publishing</button>
+            <button class="btn btn-danger" id="btn-reject" onclick="rejectJob()">✗ Reject</button>
+          </div>
+        </div>
+        <div class="form-row">
+          <div style="flex:1;">
+            <p><strong>Status:</strong> <span id="vdetail-status"></span></p>
+            <p><strong>Duration:</strong> <span id="vdetail-duration"></span>s</p>
+            <p><strong>QC Score:</strong> <span id="vdetail-qc"></span></p>
+            <p><strong>Output File:</strong> <span id="vdetail-path" style="font-family:monospace; font-size:12px;"></span></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div style="padding: 16px 20px; font-weight: 600;">Video Jobs for Review</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Job ID</th>
+              <th>Topic</th>
+              <th>Status</th>
+              <th>Duration</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="video-jobs-table">
+            <tr><td colspan="5" style="text-align:center;">Loading video renders...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Pane 4: Publishing -->
+    <section id="pane-publishing" class="content-pane">
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-title">YouTube OAuth Connection</div>
+          <div class="kpi-value" id="yt-conn-status" style="font-size: 18px;">Checking...</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">Instagram Graph API</div>
+          <div class="kpi-value" id="ig-conn-status" style="font-size: 18px;">Checking...</div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <h3 style="margin-bottom: 12px;">Publish Approved Video</h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+          Note: Only videos that have passed automated QC and received human approval can be published.
+        </p>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Select Approved Job ID</label>
+            <input type="text" id="pub-job-id" class="form-control" placeholder="Paste Job UUID">
+          </div>
+          <div class="form-group">
+            <label>Platform</label>
+            <select id="pub-platform" class="form-control">
+              <option value="youtube">YouTube Shorts</option>
+              <option value="instagram">Instagram Reels</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Privacy</label>
+            <select id="pub-privacy" class="form-control">
+              <option value="private">Private (Safe Testing)</option>
+              <option value="unlisted">Unlisted</option>
+              <option value="public">Public</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="triggerPublish()">Upload Video</button>
+      </div>
+    </section>
+
+    <!-- Pane 5: Analytics -->
+    <section id="pane-analytics" class="content-pane">
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-title">Total Published</div>
+          <div class="kpi-value" id="kpi-analytics-published">0</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">Total Recorded Views</div>
+          <div class="kpi-value" id="kpi-analytics-views">0</div>
+        </div>
+      </div>
+      <div class="form-card">
+        <h3>Performance Summary</h3>
+        <p style="color:var(--text-muted); margin-top:8px; font-size:14px;">
+          Metrics are collected directly via official platform APIs.
+        </p>
+      </div>
+    </section>
+
+    <!-- Pane 6: Settings & Diagnostics -->
+    <section id="pane-settings" class="content-pane">
+      <div class="table-card" style="margin-bottom:24px;">
+        <div style="padding: 16px 20px; font-weight: 600;">System Diagnostics</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Component</th>
+              <th>Status</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody id="diag-table">
+            <tr><td colspan="3" style="text-align:center;">Running diagnostics...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

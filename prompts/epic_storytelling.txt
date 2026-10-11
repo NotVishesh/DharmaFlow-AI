@@ -1,0 +1,11 @@
+# Category B: Epic Storytelling Prompt Template (Ramayana & Mahabharata)
+
+Target Objective:
+Explain an episode, character decision, ethical dilemma, or lesser-known story from the Ramayana or Mahabharata.
+
+Requirements:
+1. Identify the tradition or retelling (e.g., Valmiki Ramayana, Vyasa Mahabharata, Kamban, Ramcharitmanas).
+2. Clearly distinguish traditional religious events from literary retellings.
+3. No invented dialogues attributed to sacred characters without textual basis.
+4. Highlight the deeper moral dilemma (Dharma Sankata) and its resolution.
+5. Maintain dignified storytelling rhythm suited for 30-45 second vertical short video.
