@@ -90,6 +90,13 @@ def run_diagnostics() -> list[dict[str, Any]]:
     except ImportError:
         results.append(_check("gTTS", False, "gTTS not installed — TTS unavailable without alternative provider", required=False))
 
+    # Qwen3-TTS (Open-source emotional AI TTS)
+    try:
+        import qwen_tts
+        results.append(_check("Qwen3-TTS", True, "Qwen3-TTS emotional AI model library installed", required=False))
+    except ImportError:
+        results.append(_check("Qwen3-TTS", False, "Qwen3-TTS not installed (pip install qwen-tts)", required=False))
+
     # edge-tts
     try:
         import edge_tts

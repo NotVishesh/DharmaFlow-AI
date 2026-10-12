@@ -81,17 +81,37 @@ python -m app demo
 
 ## 4. Voiceover & TTS Issues
 
-### Issue A: Edge-TTS Fails with Connection Error
+### Issue A: Qwen3-TTS SoX or flash-attn Warnings
+**Symptoms:** Terminal displays:
+- `'sox' is not recognized as an internal or external command` or `SoX could not be found!`
+- `Warning: flash-attn is not installed. Will only run the manual PyTorch version.`
+**Impact & Resolution:**
+- **These warnings are completely harmless and non-blocking**.
+- PyTorch and `soundfile` handle all audio encoding without requiring SoX on Windows 11.
+- `flash-attn` is an optional Linux-optimized CUDA package; Qwen3-TTS runs standard PyTorch scaled dot-product attention (SDPA) with full CUDA acceleration on RTX 4050 automatically.
+
+### Issue B: Qwen3-TTS Model Download / SSL Timeout
+**Symptoms:** `Qwen3-TTS synthesis failed: ... ConnectionResetError / SSLError`
+**Solutions:**
+1. Qwen3-TTS downloads the lightweight 0.6B checkpoint (`Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice`) from Hugging Face on its first run and caches it locally in `~/.cache/huggingface/hub/`.
+2. If network access to Hugging Face is throttled or interrupted, DharmaFlow AI **automatically falls back to Edge-TTS** or gTTS, guaranteeing that the video render never halts or corrupts.
+3. Once downloaded, Qwen3-TTS operates entirely offline without network dependencies.
+4. To pre-download the model explicitly:
+   ```powershell
+   python -c "from qwen_tts import Qwen3TTSModel; Qwen3TTSModel.from_pretrained('Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice')"
+   ```
+
+### Issue C: Edge-TTS Connection Error
 **Symptoms:** `aiohttp.ClientConnectorError` or `WSServerHandshakeError`
 **Solutions:**
 1. Edge-TTS requires an active internet connection to communicate with Microsoft's neural TTS endpoint.
-2. If offline, switch to the local Piper engine or offline demo mode:
+2. If offline, ensure `tts.provider: qwen3` is configured (offline once weights are cached) or switch to local Piper engine:
    In `config/config.yaml`:
    ```yaml
    tts:
      provider: gtts   # or "piper" with local ONNX model
    ```
-3. If running headless without network, use the offline demo flag: `--demo`.
+3. If running headless without network, use the offline demo mode: `python -m app demo`.
 
 ---
 

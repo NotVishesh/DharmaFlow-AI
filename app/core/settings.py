@@ -71,9 +71,12 @@ class LLMConfig(BaseModel):
 
 
 class TTSConfig(BaseModel):
-    provider: str = "gtts"
+    provider: str = "qwen3"
     language: str = "hi"
     speed: float = 1.0
+    qwen3_model_name: str = "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice"
+    qwen3_speaker: str = "Ryan"
+    qwen3_instruct: str = "Speak in a calm, serene, deeply emotional, devotional tone with reverence."
     edge_tts_voice: str = "hi-IN-SwaraNeural"
     gtts_language: str = "hi"
     gtts_slow: bool = False

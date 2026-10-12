@@ -148,13 +148,14 @@ visuals:
 |---|---|---|---|
 | **Script Generation** | Ollama (`llama3.2:3b`) | MockLLM / OpenAI / Anthropic / Gemini | ~2.5 GB RAM / VRAM |
 | **Visual Art** | Stable Diffusion 1.5 (`v1-5-pruned`) | Pillow Procedural Placeholder | ~3.8 GB VRAM |
-| **Voice Narration** | Edge-TTS (`hi-IN-SwaraNeural`) | gTTS / Piper local ONNX | Network / ~200 MB RAM |
+| **Voice Narration** | Qwen3-TTS (`Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice`) | Edge-TTS / gTTS / Piper ONNX | ~1.2 GB VRAM / CPU |
 | **Compositing** | FFmpeg H.264 (libx264) | NVENC (`h264_nvenc`) | CPU / Hardware encoder |
 
 ---
 
 ## 8. Model Licensing & Commercial Use Verification
 
+- **Qwen3-TTS**: Open-source model by Alibaba Qwen released under the Apache 2.0 license. Fully permitted for commercial and non-commercial applications.
 - **Stable Diffusion 1.5**: Released under the CreativeML Open RAIL-M license. Commercial use is permitted provided ethical content restrictions are honored.
 - **Edge-TTS / gTTS**: Uses standard neural voices. Voices are synthetic and do not imitate real living gurus, protecting personal identity rights.
 - **Scripture Texts**: Sanskrit texts (Vedas, Upanishads, Gita, Valmiki Ramayana) are ancient public domain heritage. Translations must cite accredited educational sources.
@@ -164,7 +165,30 @@ visuals:
 
 ## 9. Text-to-Speech (TTS) Setup
 
-Microsoft Edge-TTS provides free, high-fidelity neural speech for Hindi and English without local GPU memory overhead:
+### Primary: Qwen3-TTS (Emotional Open-Source AI Model)
+DharmaFlow AI utilizes **Qwen3-TTS** (`qwen-tts`), an open-source expressive speech synthesis model from Alibaba Qwen, to produce natural, reverent, and emotionally resonant devotional narrations.
+
+Key features:
+- **Emotional Steerability**: Guided by custom `instruct` prompts (e.g. `"Speak in a calm, serene, deeply emotional, devotional tone with reverence."`).
+- **Hardware-Friendly (0.6B Checkpoint)**: Uses `Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice` (~1.2 GB VRAM / bfloat16), fitting well inside the 6 GB VRAM budget alongside sequential pipeline stages.
+- **Zero Ongoing Cost**: Open weights under Apache 2.0 license.
+- **Configurable Voices & Styles**: Change speaker (e.g. `Ryan`) and adjust spiritual tones (`instruct`) in `config/config.yaml`.
+- **Fault-Tolerant Fallback**: If weights are downloading or offline, DharmaFlow AI seamlessly falls back to high-fidelity Edge-TTS or gTTS without failing the video pipeline.
+
+Configuration in `config/config.yaml`:
+```yaml
+tts:
+  provider: qwen3
+  language: hi
+  speed: 1.0
+  qwen3:
+    model_name: "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice"
+    speaker: "Ryan"
+    instruct: "Speak in a calm, serene, deeply emotional, devotional tone with reverence."
+```
+
+### Fallback 1: Microsoft Edge-TTS (Free Neural Voices)
+High-fidelity cloud neural speech for Hindi and English without local GPU memory overhead:
 - Hindi: `hi-IN-SwaraNeural` (female) or `hi-IN-MadhurNeural` (male)
 - Indian English: `en-IN-NeerjaNeural`
 
@@ -172,6 +196,10 @@ Test speech synthesis via CLI:
 ```powershell
 edge-tts --voice hi-IN-SwaraNeural --text "कर्मण्येवाधिकारस्ते मा फलेषु कदाचन" --write-media test.mp3
 ```
+
+### Fallback 2: Piper TTS & gTTS
+- **Piper**: Fully offline fast local neural TTS with ONNX runtime.
+- **gTTS**: Lightweight fallback requiring minimal bandwidth.
 
 ---
 

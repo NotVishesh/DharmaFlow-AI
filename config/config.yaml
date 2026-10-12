@@ -54,16 +54,13 @@ llm:
     max_tokens: 4096
 
 tts:
-  provider: gtts             # gtts | piper | kokoro | edge_tts
+  provider: qwen3            # qwen3 | edge_tts | gtts | piper | kokoro
   language: hi
   speed: 1.0
-  piper:
-    model_path: ""
-    voice: ""
-    sample_rate: 22050
-  kokoro:
-    model_path: ""
-    voice: af_heart
+  qwen3:
+    model_name: "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice"
+    speaker: "Ryan"
+    instruct: "Speak in a calm, serene, deeply emotional, devotional tone with reverence."
   edge_tts:
     voice: hi-IN-SwaraNeural  # Microsoft Edge TTS voice
   gtts:

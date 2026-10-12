@@ -159,6 +159,111 @@ class PiperTTSProvider(TTSProvider):
             raise RuntimeError(f"Piper failed: {result.stderr}")
         return output_path
 
+class Qwen3TTSProvider(TTSProvider):
+    """
+    Qwen3-TTS — Open-source emotional, expressive speech synthesis model by Qwen / Alibaba Cloud.
+    Features natural emotion, tone, and prosody control via 'instruct' prompt and multiple expressive voices.
+    Model checkpoints: Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice (recommended for 6GB VRAM) or 1.7B.
+    Supported speakers: ryan, serena, vivian, aiden, uncle_fu, ono_anna, sohee, eric, dylan.
+    """
+
+    SUPPORTED_SPEAKERS = {"serena", "vivian", "uncle_fu", "ryan", "aiden", "ono_anna", "sohee", "eric", "dylan"}
+
+    def __init__(
+        self,
+        model_name: str = "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+        speaker: str = "ryan",
+        language: str = "auto",
+        instruct: str = "Speak in a calm, serene, deeply emotional, devotional tone with reverence.",
+        device: Optional[str] = None,
+    ):
+        self.model_name = model_name
+        self.speaker = speaker.lower() if speaker else "ryan"
+        self.language = language
+        self.instruct = instruct
+        self.device = device
+        self._model = None
+
+    def is_available(self) -> bool:
+        try:
+            import qwen_tts
+            return True
+        except ImportError:
+            return False
+
+    def _get_model(self):
+        if self._model is None:
+            import torch
+            from qwen_tts import Qwen3TTSModel
+            device_str = self.device or ("cuda:0" if torch.cuda.is_available() else "cpu")
+            dtype = torch.bfloat16 if torch.cuda.is_available() else torch.float32
+
+            # Try local snapshot resolution first for instant offline startup
+            model_target = self.model_name
+            try:
+                from huggingface_hub import snapshot_download
+                local_path = snapshot_download(self.model_name, local_files_only=True)
+                model_target = local_path
+                logger.info("Found cached Qwen3-TTS weights at %s", local_path)
+            except Exception:
+                logger.info("No local cache found, downloading '%s'...", self.model_name)
+
+            logger.info("Loading Qwen3-TTS model on %s...", device_str)
+            self._model = Qwen3TTSModel.from_pretrained(
+                model_target,
+                device_map=device_str,
+                dtype=dtype,
+            )
+        return self._model
+
+    def synthesize(self, text: str, output_path: Path, speed: float = 1.0) -> Path:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            import soundfile as sf
+            model = self._get_model()
+
+            # Map language: English -> 'english', all others (hi, sanskrit, hinglish, auto) -> 'auto'
+            lang_lower = (self.language or "auto").lower()
+            if lang_lower in ("en", "english"):
+                target_lang = "english"
+            else:
+                target_lang = "auto"
+
+            target_speaker = self.speaker.lower() if self.speaker else "ryan"
+            if target_speaker not in self.SUPPORTED_SPEAKERS:
+                logger.info("Speaker '%s' not in supported list, defaulting to 'ryan'", target_speaker)
+                target_speaker = "ryan"
+
+            logger.info(
+                "Synthesizing speech with Qwen3-TTS (speaker=%s, lang=%s)...",
+                target_speaker,
+                target_lang,
+            )
+            wavs, sr = model.generate_custom_voice(
+                text=text,
+                speaker=target_speaker,
+                language=target_lang,
+                instruct=self.instruct,
+            )
+
+            sf.write(str(output_path), wavs[0], sr)
+
+            if speed != 1.0:
+                tmp_wav = output_path.with_name(f"tmp_{output_path.name}")
+                output_path.rename(tmp_wav)
+                _convert_to_wav(tmp_wav, output_path, speed=speed)
+                tmp_wav.unlink(missing_ok=True)
+
+            logger.info("Qwen3-TTS synthesized successfully: %s", output_path.name)
+            return output_path
+        except Exception as e:
+            logger.warning(
+                "Qwen3-TTS synthesis failed: %s. Using high-quality EdgeTTS neural fallback.",
+                e,
+            )
+            fallback = EdgeTTSProvider() if EdgeTTSProvider().is_available() else GTTSProvider()
+            return fallback.synthesize(text, output_path, speed=speed)
+
 
 class SilentFallbackProvider(TTSProvider):
     """

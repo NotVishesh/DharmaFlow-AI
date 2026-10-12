@@ -197,7 +197,7 @@ def run_pipeline(
 
         # ── Step 6: Generate Audio ──────────────────────────────────────────
         logger.info("[5/7] Generating voiceover...")
-        tts_provider = get_tts_provider("silent" if demo_mode else None)
+        tts_provider = get_tts_provider("silent" if demo_mode else None, language=script.language)
         scene_audio: list[Path] = []
 
         for scene in script.scenes:
