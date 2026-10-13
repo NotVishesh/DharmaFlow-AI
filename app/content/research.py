@@ -19,10 +19,78 @@ class ResearchEngine:
 
     @staticmethod
     def identify_references_for_topic(topic: str, category: str) -> list[SourceReference]:
-        """Match relevant sources from the trusted registry based on keywords."""
+        """Match relevant sources from the trusted registry based on category and keywords."""
         topic_lower = topic.lower()
+        cat_lower = (category or "general").lower()
         matched: list[SourceReference] = []
 
+        # 1. Check domain/category matches
+        if cat_lower == "tech_ai" or any(k in topic_lower for k in ["ai", "artificial intelligence", "quantum", "coding", "computer", "robot", "algorithm", "software", "tech"]):
+            src = get_source_by_name("IEEE & Computer Science Research Archive (arXiv)") or TRUSTED_SOURCES[9]
+            matched.append(
+                SourceReference(
+                    name=src["name"],
+                    url=src.get("url"),
+                    source_type=src["source_type"],
+                    author=src.get("author", "Computer Science Research"),
+                    passage=f"Technical & Computer Science Reference: {topic[:60]}",
+                    license_notes=src.get("license_notes", "Open access educational synthesis"),
+                )
+            )
+
+        if cat_lower == "science_space" or any(k in topic_lower for k in ["space", "universe", "black hole", "galaxy", "physics", "planet", "nasa", "cosmos", "science", "atom", "biology"]):
+            src = get_source_by_name("NASA & Peer-Reviewed Space Science Archive") or TRUSTED_SOURCES[8]
+            matched.append(
+                SourceReference(
+                    name=src["name"],
+                    url=src.get("url"),
+                    source_type=src["source_type"],
+                    author=src.get("author", "Scientific Consensus"),
+                    passage=f"Peer-Reviewed Scientific Literature: {topic[:60]}",
+                    license_notes=src.get("license_notes", "Public domain scientific data"),
+                )
+            )
+
+        if cat_lower in ("motivation_mindset", "health_psychology") or any(k in topic_lower for k in ["psychology", "mindset", "habit", "brain", "dopamine", "focus", "discipline", "anxiety", "motivation", "success"]):
+            src = get_source_by_name("American Psychological Association (APA) & Behavioral Science") or TRUSTED_SOURCES[11]
+            matched.append(
+                SourceReference(
+                    name=src["name"],
+                    url=src.get("url"),
+                    source_type=src["source_type"],
+                    author=src.get("author", "Behavioral Science Research"),
+                    passage=f"Behavioral Psychology & Cognitive Science: {topic[:60]}",
+                    license_notes=src.get("license_notes", "Educational synthesis"),
+                )
+            )
+
+        if cat_lower == "finance_business" or any(k in topic_lower for k in ["finance", "money", "investing", "economics", "market", "wealth", "compound interest", "business", "startup"]):
+            src = get_source_by_name("Economic & Financial Literacy Research") or TRUSTED_SOURCES[12]
+            matched.append(
+                SourceReference(
+                    name=src["name"],
+                    url=src.get("url"),
+                    source_type=src["source_type"],
+                    author=src.get("author", "Financial Education Consensus"),
+                    passage=f"Economic Principles & Financial Reference: {topic[:60]}",
+                    license_notes=src.get("license_notes", "Educational commentary only"),
+                )
+            )
+
+        if cat_lower == "history_culture" or any(k in topic_lower for k in ["history", "empire", "ancient", "civilization", "century", "dynasty", "war", "historical"]):
+            src = get_source_by_name("Encyclopaedia Britannica & World History Archive") or TRUSTED_SOURCES[10]
+            matched.append(
+                SourceReference(
+                    name=src["name"],
+                    url=src.get("url"),
+                    source_type=src["source_type"],
+                    author=src.get("author", "Historical Consensus"),
+                    passage=f"Historical Records & Archival Synthesis: {topic[:60]}",
+                    license_notes=src.get("license_notes", "Educational historical commentary"),
+                )
+            )
+
+        # 2. Check Philosophical / Devotional / Scriptural keywords
         if "gita" in topic_lower or "bhagavad" in topic_lower or "krishna" in topic_lower:
             src = get_source_by_name("Gita Supersite (IIT Kanpur)") or TRUSTED_SOURCES[1]
             matched.append(
@@ -62,19 +130,32 @@ class ResearchEngine:
                 )
             )
 
-        # Fallback to general scripture archive if empty
+        # 3. Fallback to general educational archive if no specific match
         if not matched:
-            src = TRUSTED_SOURCES[4]
-            matched.append(
-                SourceReference(
-                    name=src["name"],
-                    url=src.get("url"),
-                    source_type=src["source_type"],
-                    author="Sacred Texts Archive",
-                    passage="Public domain translations of ancient Hindu texts",
-                    license_notes=src.get("license_notes", "Public domain"),
+            if cat_lower in ("scripture_explainer", "epic_storytelling", "devotional_reflection", "festival_cultural", "temple_historical", "philosophy_wisdom"):
+                src = TRUSTED_SOURCES[4]
+                matched.append(
+                    SourceReference(
+                        name=src["name"],
+                        url=src.get("url"),
+                        source_type=src["source_type"],
+                        author="Sacred Texts Archive",
+                        passage="Public domain translations of philosophical and spiritual texts",
+                        license_notes=src.get("license_notes", "Public domain"),
+                    )
                 )
-            )
+            else:
+                src = get_source_by_name("Open Educational & Encyclopedic Reference") or TRUSTED_SOURCES[-1]
+                matched.append(
+                    SourceReference(
+                        name=src["name"],
+                        url=src.get("url"),
+                        source_type=src["source_type"],
+                        author=src.get("author", "Open Knowledge Contributors"),
+                        passage=f"Verified Educational Reference: {topic[:60]}",
+                        license_notes=src.get("license_notes", "Educational synthesis"),
+                    )
+                )
 
         return matched
 

@@ -21,6 +21,106 @@ from app.database.models import ContentCategory, ContentIdea, Script
 logger = logging.getLogger(__name__)
 
 CURATED_TOPIC_POOL: dict[str, list[dict[str, str]]] = {
+    ContentCategory.GENERAL.value: [
+        {
+            "topic": "How Submarine Fiber Optic Cables Power 99% of the Global Internet",
+            "language": "en",
+            "source_hint": "TeleGeography Submarine Cable Map & Optical Engineering",
+        },
+        {
+            "topic": "The 5-Second Rule: How to Beat Procrastination Instantly",
+            "language": "en",
+            "source_hint": "Behavioral Psychology & Prefrontal Cortex Activation",
+        },
+    ],
+    ContentCategory.TECH_AI.value: [
+        {
+            "topic": "How Large Language Models Actually Predict the Next Word",
+            "language": "en",
+            "source_hint": "Transformer Architecture (Vaswani et al., Attention Is All You Need)",
+        },
+        {
+            "topic": "Quantum Computing Explained in 45 Seconds",
+            "language": "en",
+            "source_hint": "Qubits, Superposition & Entanglement in Quantum Mechanics",
+        },
+    ],
+    ContentCategory.SCIENCE_SPACE.value: [
+        {
+            "topic": "What Happens If You Fall Into a Supermassive Black Hole?",
+            "language": "en",
+            "source_hint": "General Relativity, Event Horizon & Spaghettification",
+        },
+        {
+            "topic": "Why Time Moves Slower Near Massive Objects — Time Dilation",
+            "language": "en",
+            "source_hint": "Einstein's Theory of General Relativity",
+        },
+    ],
+    ContentCategory.MOTIVATION_MINDSET.value: [
+        {
+            "topic": "The Power of Atomic Habits: Getting 1% Better Every Day",
+            "language": "en",
+            "source_hint": "Compound Growth in Behavioral Habit Formation",
+        },
+        {
+            "topic": "Stoic Philosophy: Focusing Only on What You Can Control",
+            "language": "en",
+            "source_hint": "Marcus Aurelius — Meditations & Epictetus",
+        },
+    ],
+    ContentCategory.HISTORY_CULTURE.value: [
+        {
+            "topic": "How the Library of Alexandria Changed Human Civilization",
+            "language": "en",
+            "source_hint": "Ancient Hellenistic History & Scholarship",
+        },
+        {
+            "topic": "The Unbelievable Engineering of the Roman Aqueducts",
+            "language": "en",
+            "source_hint": "Ancient Roman Civil Engineering",
+        },
+    ],
+    ContentCategory.FINANCE_BUSINESS.value: [
+        {
+            "topic": "The 8th Wonder of the World: How Compound Interest Builds Wealth",
+            "language": "en",
+            "source_hint": "Exponential Financial Mathematics",
+        },
+        {
+            "topic": "Why Inflation Silently Erodes Purchasing Power Over Time",
+            "language": "en",
+            "source_hint": "Macroeconomics & Monetary Policy",
+        },
+    ],
+    ContentCategory.STORYTELLING.value: [
+        {
+            "topic": "The Parable of the Bamboo Tree: Patience Before the Breakthrough",
+            "language": "en",
+            "source_hint": "Inspirational Storytelling & Growth Mindset",
+        },
+    ],
+    ContentCategory.FACTS_TRIVIA.value: [
+        {
+            "topic": "3 Mind-Blowing Facts About the Deep Ocean You Didn't Know",
+            "language": "en",
+            "source_hint": "NOAA Oceanography & Marine Biology",
+        },
+    ],
+    ContentCategory.HEALTH_PSYCHOLOGY.value: [
+        {
+            "topic": "How Morning Sunlight Resets Your Circadian Rhythm and Focus",
+            "language": "en",
+            "source_hint": "Neurobiology & Circadian Neuroscience",
+        },
+    ],
+    ContentCategory.PHILOSOPHY_WISDOM.value: [
+        {
+            "topic": "Finding Inner Strength: Teachings of Swami Vivekananda",
+            "language": "en",
+            "source_hint": "Complete Works of Swami Vivekananda",
+        },
+    ],
     ContentCategory.SCRIPTURE_EXPLAINER.value: [
         {
             "topic": "Bhagavad Gita 2:47 — The True Essence of Karma Yoga",

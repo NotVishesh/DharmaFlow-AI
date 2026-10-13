@@ -185,14 +185,105 @@ class GeminiProvider(LLMProvider):
 
 
 class MockLLMProvider(LLMProvider):
-    """Offline mock LLM for tests and demo mode. Returns deterministic content."""
+    """Offline mock LLM for tests and demo mode. Returns deterministic topic-aware content."""
 
     def is_available(self) -> bool:
         return True
 
     def generate(self, prompt: str, system_prompt: str = "", **kwargs) -> str:
-        # Return a minimal valid script JSON for demo mode
+        import re
+        topic_match = re.search(r"Topic:\s*(.+)", prompt)
+        cat_match = re.search(r"Category:\s*(.+)", prompt)
+        lang_match = re.search(r"\(code:\s*([a-zA-Z\-]+)\)", prompt)
+        dur_match = re.search(r"Target Duration:\s*(\d+)", prompt)
+
+        topic = topic_match.group(1).strip() if topic_match else ""
+        category = cat_match.group(1).strip() if cat_match else "scripture_explainer"
+        language = lang_match.group(1).strip() if lang_match else "hi"
+        duration = int(dur_match.group(1)) if dur_match else 40
+
+        if topic and "bhagavad gita" not in topic.lower() and category != "scripture_explainer":
+            return json.dumps(self._universal_script(topic, category, language, duration))
+        if topic and language == "en":
+            return json.dumps(self._universal_script(topic, category, language, duration))
         return json.dumps(self._demo_script())
+
+    def _universal_script(self, topic: str, category: str, language: str, duration: int) -> dict:
+        scene_dur = max(3.0, round(duration / 3.0, 1))
+        return {
+            "topic": topic,
+            "category": category,
+            "language": language,
+            "target_duration_seconds": duration,
+            "title_options": [
+                f"{topic[:70]} — Explained",
+                f"The Fascinating Truth About {topic[:60]}",
+                f"Understanding {topic[:75]}",
+            ],
+            "opening_hook": f"Have you ever wondered how {topic} actually works and why it changes everything we know?",
+            "narration": (
+                f"Have you ever wondered how {topic} actually works? "
+                f"At its core, {topic} reveals some of the most fascinating principles in {category.replace('_', ' ')}. "
+                f"Every detail connects together to shape our understanding of the world and the future ahead."
+            ),
+            "scenes": [
+                {
+                    "scene_number": 1,
+                    "narration_text": f"Have you ever wondered how {topic} actually works and why it matters so much today?",
+                    "approximate_duration_seconds": scene_dur,
+                    "visual_prompt": f"Cinematic wide shot illustrating {topic}, dramatic volumetric lighting, ultra detailed, vertical 9:16 composition",
+                    "visual_type": "cinematic",
+                    "camera_movement": "slow_zoom_in",
+                    "subtitle_text": f"How does {topic[:45]} work?",
+                    "source_reference": "Open Educational Reference",
+                },
+                {
+                    "scene_number": 2,
+                    "narration_text": f"When we look closely at {topic}, we discover key insights that transform how we see {category.replace('_', ' ')}.",
+                    "approximate_duration_seconds": scene_dur,
+                    "visual_prompt": f"Detailed close-up visualization of {topic}, glowing depth of field, modern educational aesthetic, vertical 9:16 portrait",
+                    "visual_type": "infographic",
+                    "camera_movement": "slow_pan_up",
+                    "subtitle_text": f"Key insights behind {topic[:40]}",
+                    "source_reference": "Encyclopaedia Britannica",
+                },
+                {
+                    "scene_number": 3,
+                    "narration_text": f"Mastering these ideas gives us a whole new perspective. Stay curious, like, and subscribe for more.",
+                    "approximate_duration_seconds": scene_dur,
+                    "visual_prompt": f"Inspiring futuristic horizon representing discovery and knowledge about {topic}, crisp cinematic lighting, vertical 9:16",
+                    "visual_type": "futuristic",
+                    "camera_movement": "slow_zoom_out",
+                    "subtitle_text": "Stay curious — Like & Subscribe",
+                    "source_reference": None,
+                },
+            ],
+            "closing_line": f"Understanding {topic} opens the door to deeper curiosity and smarter thinking.",
+            "call_to_action": "If you found this insightful, hit Like and Subscribe for daily short-form explainers.",
+            "source_references": [
+                {
+                    "name": "Encyclopaedia Britannica",
+                    "url": "https://www.britannica.com/",
+                    "source_type": "commentary",
+                    "author": "Britannica Editors",
+                    "passage": f"Educational overview of {topic}",
+                    "license_notes": "Factual reference; original narration and synthesis.",
+                }
+            ],
+            "claims_and_evidence": [
+                {
+                    "claim_text": f"Core educational overview of {topic}",
+                    "claim_type": "educational_fact",
+                    "source_name": "Encyclopaedia Britannica",
+                    "source_reference": "Encyclopaedia Britannica",
+                    "verified": True,
+                    "needs_review": False,
+                }
+            ],
+            "copyright_notes": "Original educational script and commentary.",
+            "ai_disclosure_required": True,
+            "verification_status": "VERIFIED",
+        }
 
     def _demo_script(self) -> dict:
         return {

@@ -59,18 +59,38 @@ def cmd_gpu(args) -> int:
 
 def cmd_generate(args) -> int:
     """Generate a script and optionally run the full pipeline."""
+    import random
     from app.database.session import init_db, get_session_factory
     from app.core.pipeline import run_pipeline
+    from app.content.planner import CURATED_TOPIC_POOL
 
     init_db()
 
-    print(f"Generating video: '{args.topic}' [{args.language}] {args.duration}s {args.preset} preset")
+    topic = getattr(args, "topic", None)
+    category = getattr(args, "category", "general")
+    language = getattr(args, "language", "en")
+
+    if not topic or getattr(args, "random", False):
+        universal_cats = [
+            k for k in CURATED_TOPIC_POOL.keys()
+            if k not in ("scripture_explainer", "epic_storytelling", "devotional_reflection", "festival_cultural", "temple_historical")
+        ]
+        if category and category != "general" and category in CURATED_TOPIC_POOL:
+            chosen_cat = category
+        else:
+            chosen_cat = random.choice(universal_cats or list(CURATED_TOPIC_POOL.keys()))
+        chosen_item = random.choice(CURATED_TOPIC_POOL[chosen_cat])
+        topic = chosen_item["topic"]
+        category = chosen_cat
+        print(f"Selected random topic: '{topic}' (category={category}, lang={language})")
+
+    print(f"Generating video: '{topic}' [{language}] {args.duration}s {args.preset} preset")
     print(f"Demo mode: {args.demo}")
 
     result = run_pipeline(
-        topic=args.topic,
-        category=args.category,
-        language=args.language,
+        topic=topic,
+        category=category,
+        language=language,
         target_duration_seconds=args.duration,
         render_preset=args.preset,
         demo_mode=args.demo,
@@ -250,6 +270,11 @@ def _load_script_for_job(job_id: str):
             "opening_hook": s.opening_hook or "", "narration": s.narration or "",
             "scenes": s.scenes or [], "closing_line": s.closing_line or "",
             "verification_status": s.verification_status,
+            "generation_metadata": s.generation_metadata or {
+                "llm_provider": "OllamaProvider",
+                "llm_model": "llama3.2:3b",
+                "generation_timestamp": str(s.created_at or ""),
+            },
         })
     except Exception:
         return None
@@ -258,7 +283,7 @@ def _load_script_for_job(job_id: str):
 def main():
     parser = argparse.ArgumentParser(
         prog="python -m app",
-        description="DharmaFlow AI — Hindu Devotional Shorts Factory",
+        description="Universal AI Short-Form Video Factory",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -269,10 +294,11 @@ def main():
     subparsers.add_parser("gpu", help="Show GPU diagnostics")
 
     # generate
-    gen = subparsers.add_parser("generate", help="Generate a video from topic")
-    gen.add_argument("--topic", required=True, help="Video topic")
-    gen.add_argument("--category", default="scripture_explainer", help="Content category")
-    gen.add_argument("--language", default="hi", choices=["hi", "en", "hi-en"])
+    gen = subparsers.add_parser("generate", help="Generate a video from any topic (or pick a random topic)")
+    gen.add_argument("--topic", default="", help="Video topic (leave empty or pass --random for a random topic)")
+    gen.add_argument("--random", action="store_true", help="Pick a random topic automatically")
+    gen.add_argument("--category", default="general", help="Content category (e.g., general, tech_ai, science_space, motivation_mindset, history_culture, finance_business, storytelling, facts_trivia, health_psychology, philosophy_wisdom, scripture_explainer)")
+    gen.add_argument("--language", default="en", choices=["hi", "en", "hi-en"])
     gen.add_argument("--duration", type=int, default=45, help="Target duration (seconds)")
     gen.add_argument("--preset", default="standard", choices=["draft", "standard", "archival"])
     gen.add_argument("--demo", action="store_true", help="Use offline demo mode")

@@ -12,6 +12,12 @@ from pydantic import BaseModel, Field, field_validator
 
 class SceneVisualType(str, Enum):
     ILLUSTRATION = "illustration"
+    CINEMATIC = "cinematic"
+    INFOGRAPHIC = "infographic"
+    FUTURISTIC = "futuristic"
+    HISTORICAL = "historical"
+    ACTION = "action"
+    MINIMALIST = "minimalist"
     PORTRAIT = "portrait"
     LANDSCAPE = "landscape"
     ABSTRACT = "abstract"
@@ -39,6 +45,7 @@ class ClaimType(str, Enum):
     TRADITIONAL_INTERPRETATION = "traditional_interpretation"
     HISTORICAL_CLAIM = "historical_claim"
     SCIENTIFIC_CLAIM = "scientific_claim"
+    EDUCATIONAL_FACT = "educational_fact"
     ORIGINAL_COMMENTARY = "original_commentary"
     FICTIONALIZED_STORYTELLING = "fictionalized_storytelling"
 
@@ -56,24 +63,69 @@ class SceneSchema(BaseModel):
     asset_generation_status: str = "pending"
     asset_path: Optional[str] = None
 
+    @field_validator("visual_type", mode="before")
+    @classmethod
+    def normalize_visual_type(cls, v):
+        if isinstance(v, SceneVisualType):
+            return v
+        if isinstance(v, str):
+            val = v.strip().lower().split("|")[0].strip()
+            valid = {item.value for item in SceneVisualType}
+            if val in valid:
+                return val
+        return SceneVisualType.ILLUSTRATION.value
+
+    @field_validator("camera_movement", mode="before")
+    @classmethod
+    def normalize_camera_movement(cls, v):
+        if isinstance(v, CameraMovement):
+            return v
+        if isinstance(v, str):
+            val = v.strip().lower().split("|")[0].strip()
+            valid = {item.value for item in CameraMovement}
+            if val in valid:
+                return val
+        return CameraMovement.SLOW_ZOOM_IN.value
+
     @field_validator("visual_prompt")
     @classmethod
     def no_copyrighted_characters(cls, v: str) -> str:
+        import re
         blocked = ["bollywood", "copyright", "trademarked", "logo"]
         for b in blocked:
-            if b.lower() in v.lower():
+            if re.search(rf"\b{re.escape(b)}\b", v, re.IGNORECASE):
                 raise ValueError(f"Visual prompt contains restricted term: {b}")
         return v
 
 
 class ClaimAndEvidence(BaseModel):
     claim_text: str
-    claim_type: ClaimType
+    claim_type: ClaimType = ClaimType.ORIGINAL_COMMENTARY
     source_name: Optional[str] = None
     source_reference: Optional[str] = None
     verified: bool = False
     needs_review: bool = False
     reviewer_notes: Optional[str] = None
+
+    @field_validator("claim_type", mode="before")
+    @classmethod
+    def normalize_claim_type(cls, v):
+        if isinstance(v, ClaimType):
+            return v
+        if isinstance(v, str):
+            val = v.strip().lower().split("|")[0].strip()
+            valid = {item.value for item in ClaimType}
+            if val in valid:
+                return val
+            if "quote" in val or "quotation" in val:
+                return ClaimType.DIRECT_QUOTATION.value
+            if "scien" in val or "fact" in val:
+                return ClaimType.SCIENTIFIC_CLAIM.value
+            if "histor" in val:
+                return ClaimType.HISTORICAL_CLAIM.value
+            if "story" in val or "fiction" in val:
+                return ClaimType.FICTIONALIZED_STORYTELLING.value
+        return ClaimType.ORIGINAL_COMMENTARY.value
 
 
 class SourceReference(BaseModel):
@@ -148,11 +200,12 @@ class ScriptSchema(BaseModel):
     @field_validator("opening_hook")
     @classmethod
     def hook_not_fear_based(cls, v: str) -> str:
+        import re
         fear_phrases = [
             "you will die", "curse", "sin", "hellfire", "disaster if you don't"
         ]
         for phrase in fear_phrases:
-            if phrase.lower() in v.lower():
+            if re.search(rf"\b{re.escape(phrase)}\b", v, re.IGNORECASE):
                 raise ValueError(f"Hook uses fear-based language: '{phrase}'")
         return v
 

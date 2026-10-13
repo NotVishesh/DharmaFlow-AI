@@ -186,6 +186,7 @@ class Qwen3TTSProvider(TTSProvider):
 
     def is_available(self) -> bool:
         try:
+            logging.getLogger("sox").setLevel(logging.ERROR)
             import qwen_tts
             return True
         except ImportError:
@@ -193,6 +194,7 @@ class Qwen3TTSProvider(TTSProvider):
 
     def _get_model(self):
         if self._model is None:
+            logging.getLogger("sox").setLevel(logging.ERROR)
             import torch
             from qwen_tts import Qwen3TTSModel
             device_str = self.device or ("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -219,7 +221,6 @@ class Qwen3TTSProvider(TTSProvider):
     def synthesize(self, text: str, output_path: Path, speed: float = 1.0) -> Path:
         output_path.parent.mkdir(parents=True, exist_ok=True)
         try:
-            import soundfile as sf
             model = self._get_model()
 
             # Map language: English -> 'english', all others (hi, sanskrit, hinglish, auto) -> 'auto'
@@ -246,7 +247,18 @@ class Qwen3TTSProvider(TTSProvider):
                 instruct=self.instruct,
             )
 
-            sf.write(str(output_path), wavs[0], sr)
+            try:
+                import soundfile as sf
+                sf.write(str(output_path), wavs[0], sr)
+            except ImportError:
+                import wave
+                import numpy as np
+                audio_int16 = np.clip(wavs[0] * 32767.0, -32768, 32767).astype(np.int16)
+                with wave.open(str(output_path), "wb") as wf:
+                    wf.setnchannels(1)
+                    wf.setsampwidth(2)
+                    wf.setframerate(int(sr))
+                    wf.writeframes(audio_int16.tobytes())
 
             if speed != 1.0:
                 tmp_wav = output_path.with_name(f"tmp_{output_path.name}")
@@ -261,8 +273,12 @@ class Qwen3TTSProvider(TTSProvider):
                 "Qwen3-TTS synthesis failed: %s. Using high-quality EdgeTTS neural fallback.",
                 e,
             )
-            fallback = EdgeTTSProvider() if EdgeTTSProvider().is_available() else GTTSProvider()
-            return fallback.synthesize(text, output_path, speed=speed)
+            if EdgeTTSProvider().is_available():
+                try:
+                    return EdgeTTSProvider().synthesize(text, output_path, speed=speed)
+                except Exception as edge_err:
+                    logger.warning("EdgeTTS fallback failed (%s), trying gTTS...", edge_err)
+            return GTTSProvider().synthesize(text, output_path, speed=speed)
 
 
 class SilentFallbackProvider(TTSProvider):

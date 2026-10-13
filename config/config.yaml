@@ -17,11 +17,16 @@ content:
   max_duration_seconds: 60
   max_regeneration_attempts: 3
   category_distribution:
-    scripture_explainer: 0.30
-    epic_storytelling: 0.25
-    devotional_reflection: 0.20
-    festival_cultural: 0.15
-    temple_historical: 0.10
+    tech_ai: 0.15
+    science_space: 0.15
+    motivation_mindset: 0.15
+    facts_trivia: 0.15
+    storytelling: 0.10
+    history_culture: 0.10
+    finance_business: 0.05
+    health_psychology: 0.05
+    philosophy_wisdom: 0.05
+    scripture_explainer: 0.05
 
   blocked_topics: []         # list of regex patterns or exact strings
   review_required_topics:    # patterns triggering mandatory human review
@@ -55,12 +60,12 @@ llm:
 
 tts:
   provider: qwen3            # qwen3 | edge_tts | gtts | piper | kokoro
-  language: hi
+  language: en
   speed: 1.0
   qwen3:
     model_name: "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice"
     speaker: "Ryan"
-    instruct: "Speak in a calm, serene, deeply emotional, devotional tone with reverence."
+    instruct: "Speak in a clear, engaging, natural, expressive storytelling tone."
   edge_tts:
     voice: hi-IN-SwaraNeural  # Microsoft Edge TTS voice
   gtts:

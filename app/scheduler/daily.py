@@ -92,22 +92,12 @@ def run_daily_job(dry_run: bool = False, limit: int = 1) -> int:
             return 0
 
         # ── Select topic ────────────────────────────────────────────────────
-        idea = db.query(ContentIdea).filter(ContentIdea.used == False).first()
-        if idea:
-            topic = idea.topic
-            category = idea.category
-            language = idea.language
-        else:
-            # Fallback topic pool for when queue is empty
-            fallback_topics = [
-                ("The teaching of detachment in Bhagavad Gita", "scripture_explainer", "hi"),
-                ("The story of Prahlad and Narasimha", "epic_storytelling", "hi"),
-                ("Why Diwali is celebrated — the return of Lord Rama", "festival_cultural", "hi"),
-                ("Significance of Navaratri — nine nights of Devi", "festival_cultural", "hi"),
-                ("Ganesha — the remover of obstacles", "devotional_reflection", "hi"),
-            ]
-            import random
-            topic, category, language = random.choice(fallback_topics)
+        from app.content.planner import ContentPlanner
+        planner = ContentPlanner(db)
+        idea = planner.get_or_create_next_idea()
+        topic = idea.topic
+        category = idea.category
+        language = idea.language
 
         if dry_run:
             logger.info("[DRY RUN] Would generate: '%s' (%s, %s)", topic, category, language)

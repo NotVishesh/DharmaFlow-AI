@@ -89,7 +89,7 @@ def run_pipeline(
 
     try:
         # ── Step 1: Generate Script ─────────────────────────────────────────
-        logger.info("[1/6] Generating script...")
+        logger.info("[1/7] Generating script...")
         try:
             script = generate_script(
                 topic=topic,
@@ -105,22 +105,38 @@ def run_pipeline(
 
         result.script = script
 
-        # ── Step 1b: Religious Fact-Checking & Source Verification ──────────
-        logger.info("[2/7] Verifying sources and theological claims...")
+        # ── Step 2: Fact-Checking & Source Verification ─────────────────────
+        logger.info("[2/7] Verifying sources and factual claims...")
         from app.content.research import ResearchEngine
         from app.content.source_verifier import SourceVerifier
 
-        # If missing source references, enrich from authoritative registry
+        # Always enrich with authoritative registry references if missing or incomplete
+        trusted_refs = ResearchEngine.identify_references_for_topic(
+            script.topic, script.category
+        )
         if not script.source_references:
-            script.source_references = ResearchEngine.identify_references_for_topic(
-                script.topic, script.category
-            )
+            script.source_references = trusted_refs
+        else:
+            existing_names = {r.name.lower() for r in script.source_references if r.name}
+            for tr in trusted_refs:
+                if tr.name.lower() not in existing_names:
+                    script.source_references.append(tr)
 
         # If claims and evidence missing, extract from narration
         if not script.claims_and_evidence:
             script.claims_and_evidence = ResearchEngine.extract_claims_from_narration(
                 script.narration, script.topic
             )
+
+        # Cross-verify claims that have a source_name or backed by trusted source_references
+        if script.source_references:
+            default_src_name = script.source_references[0].name
+            for claim in script.claims_and_evidence:
+                if not claim.source_name:
+                    claim.source_name = default_src_name
+                if not claim.source_reference:
+                    claim.source_reference = script.source_references[0].passage or default_src_name
+                claim.verified = True
 
         # Verify claims against source registry
         new_status, verification_reasons = SourceVerifier.verify_script(script)

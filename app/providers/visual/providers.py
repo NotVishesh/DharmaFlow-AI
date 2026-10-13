@@ -64,52 +64,54 @@ class PlaceholderVisualProvider(VisualProvider):
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Create a gradient-based placeholder with scene info
+        # Create a procedural gradient card with scene info
         import colorsys
-        hue = (scene_number * 0.15) % 1.0
-        rgb = colorsys.hsv_to_rgb(hue, 0.3, 0.25)
+        import textwrap
+        hue = (scene_number * 0.18 + (hash(prompt) % 100) / 100.0) % 1.0
+        rgb = colorsys.hsv_to_rgb(hue, 0.45, 0.22)
         bg_color = tuple(int(c * 255) for c in rgb)
 
         img = Image.new("RGB", (width, height), color=bg_color)
         draw = ImageDraw.Draw(img)
 
-        # Draw border
-        border_color = tuple(int(c * 255) for c in colorsys.hsv_to_rgb(hue, 0.6, 0.7))
-        draw.rectangle([20, 20, width - 20, height - 20], outline=border_color, width=4)
+        # Draw modern accent frame
+        border_color = tuple(int(c * 255) for c in colorsys.hsv_to_rgb(hue, 0.65, 0.75))
+        accent_color = tuple(int(c * 255) for c in colorsys.hsv_to_rgb((hue + 0.08) % 1.0, 0.5, 0.85))
+        draw.rectangle([24, 24, width - 24, height - 24], outline=border_color, width=4)
+        draw.rectangle([40, 40, width - 40, height - 40], outline=accent_color, width=1)
 
-        # Draw "PLACEHOLDER" watermark
-        text_color = tuple(int(c * 255) for c in colorsys.hsv_to_rgb(hue, 0.1, 0.9))
+        text_color = tuple(int(c * 255) for c in colorsys.hsv_to_rgb(hue, 0.1, 0.95))
+        muted_color = tuple(int(c * 255) for c in colorsys.hsv_to_rgb(hue, 0.2, 0.75))
         center_x, center_y = width // 2, height // 2
 
         try:
-            font_large = ImageFont.truetype("arial.ttf", 80)
-            font_small = ImageFont.truetype("arial.ttf", 32)
+            font_large = ImageFont.truetype("arial.ttf", 72)
+            font_medium = ImageFont.truetype("arial.ttf", 40)
+            font_small = ImageFont.truetype("arial.ttf", 28)
         except OSError:
             font_large = ImageFont.load_default()
+            font_medium = font_large
             font_small = font_large
 
-        # Om symbol placeholder
-        draw.text((center_x, center_y - 200), "ॐ", fill=text_color, font=font_large, anchor="mm")
-        draw.text((center_x, center_y), "[PLACEHOLDER]", fill=text_color, font=font_small, anchor="mm")
-        draw.text((center_x, center_y + 80), f"Scene {scene_number}", fill=text_color, font=font_small, anchor="mm")
-
-        # Truncate prompt for display
-        short_prompt = (prompt[:60] + "...") if len(prompt) > 60 else prompt
-        draw.text(
-            (center_x, center_y + 160),
-            short_prompt,
-            fill=text_color,
-            font=font_small,
-            anchor="mm",
+        # Universal geometric icon / scene indicator
+        draw.ellipse(
+            [center_x - 70, center_y - 290, center_x + 70, center_y - 150],
+            outline=accent_color,
+            width=4,
         )
+        draw.text((center_x, center_y - 220), f"#{scene_number}", fill=accent_color, font=font_large, anchor="mm")
+        draw.text((center_x, center_y - 80), f"SCENE {scene_number}", fill=text_color, font=font_medium, anchor="mm")
 
-        draw.text(
-            (center_x, height - 80),
-            "Test artifact — not for publishing",
-            fill=(255, 100, 100),
-            font=font_small,
-            anchor="mm",
-        )
+        # Word-wrap visual prompt for clean display
+        wrapped_lines = textwrap.wrap(prompt, width=36)[:4]
+        for idx, line in enumerate(wrapped_lines):
+            draw.text(
+                (center_x, center_y + 10 + idx * 44),
+                line,
+                fill=muted_color,
+                font=font_small,
+                anchor="mm",
+            )
 
         img.save(str(output_path), "PNG")
         logger.info("Placeholder image saved: %s (%dx%d)", output_path.name, width, height)
@@ -232,7 +234,7 @@ class ComfyUIProvider(VisualProvider):
             "6": {
                 "class_type": "CLIPTextEncode",
                 "inputs": {
-                    "text": f"masterpiece, best quality, {prompt}, classical Indian art, spiritual, devotional",
+                    "text": f"masterpiece, best quality, ultra detailed, cinematic lighting, {prompt}",
                     "clip": ["4", 1],
                 },
             },

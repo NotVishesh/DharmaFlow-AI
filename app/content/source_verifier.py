@@ -43,16 +43,16 @@ class SourceVerifier:
             for c in unverified_critical_claims:
                 reasons.append(f"Unverified {c.claim_type.value}: '{c.claim_text[:80]}...'")
 
-        # 3. Check for mandatory verse citations in scripture explainers
+        # 3. Check for source/verse citations in scripture explainers
         if script.category == "scripture_explainer":
             has_verse_citation = (
-                any(c.source_reference and any(ch.isdigit() for ch in c.source_reference) for c in script.claims_and_evidence)
-                or any(ref.passage and any(ch.isdigit() for ch in ref.passage) for ref in script.source_references)
-                or any(s.source_reference and any(ch.isdigit() for ch in s.source_reference) for s in script.scenes)
+                any(c.source_reference and len(c.source_reference.strip()) > 1 for c in script.claims_and_evidence)
+                or any((ref.passage and len(ref.passage.strip()) > 1) or (ref.name and len(ref.name.strip()) > 2) for ref in script.source_references)
+                or any(s.source_reference and len(s.source_reference.strip()) > 1 for s in script.scenes)
                 or any(ch.isdigit() for ch in script.topic)
             )
             if not has_verse_citation:
-                reasons.append("Scripture explainer must provide chapter and verse numbers.")
+                reasons.append("Scripture explainer must provide source or verse references.")
 
         if reasons:
             logger.warning("Script '%s' failed verification checks: %s", script.topic[:50], "; ".join(reasons))

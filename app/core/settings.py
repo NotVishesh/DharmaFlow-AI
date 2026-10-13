@@ -39,11 +39,16 @@ class ContentConfig(BaseModel):
     max_duration_seconds: int = 60
     max_regeneration_attempts: int = 3
     category_distribution: dict[str, float] = Field(default_factory=lambda: {
-        "scripture_explainer": 0.30,
-        "epic_storytelling": 0.25,
-        "devotional_reflection": 0.20,
-        "festival_cultural": 0.15,
-        "temple_historical": 0.10,
+        "tech_ai": 0.15,
+        "science_space": 0.15,
+        "motivation_mindset": 0.15,
+        "facts_trivia": 0.15,
+        "storytelling": 0.10,
+        "history_culture": 0.10,
+        "finance_business": 0.05,
+        "health_psychology": 0.05,
+        "philosophy_wisdom": 0.05,
+        "scripture_explainer": 0.05,
     })
     blocked_topics: list[str] = Field(default_factory=list)
     review_required_topics: list[str] = Field(default_factory=lambda: [
@@ -72,11 +77,11 @@ class LLMConfig(BaseModel):
 
 class TTSConfig(BaseModel):
     provider: str = "qwen3"
-    language: str = "hi"
+    language: str = "en"
     speed: float = 1.0
     qwen3_model_name: str = "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice"
     qwen3_speaker: str = "Ryan"
-    qwen3_instruct: str = "Speak in a calm, serene, deeply emotional, devotional tone with reverence."
+    qwen3_instruct: str = "Speak in a clear, engaging, natural, expressive storytelling tone."
     edge_tts_voice: str = "hi-IN-SwaraNeural"
     gtts_language: str = "hi"
     gtts_slow: bool = False

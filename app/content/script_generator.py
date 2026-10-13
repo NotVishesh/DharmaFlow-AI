@@ -17,87 +17,85 @@ from app.providers.llm import get_llm_provider, LLMProvider
 
 logger = logging.getLogger(__name__)
 
-SYSTEM_PROMPT = """You are a knowledgeable, respectful Hindu devotional content writer creating educational short video scripts.
+SYSTEM_PROMPT = """You are an expert short-form video creator, researcher, and scriptwriter capable of producing engaging, accurate, high-retention scripts on ANY topic (Technology & AI, Science & Space, History, Motivation & Mindset, Finance & Business, Storytelling, Health & Psychology, Facts & Trivia, Philosophy & Spirituality, etc.).
 
 IMPORTANT RULES:
-1. All factual claims MUST be sourced. Never invent scripture verses.
-2. Never fabricate Sanskrit verses and present them as verified quotations.
-3. Distinguish clearly between: direct quotation, translation, traditional interpretation, and original commentary.
-4. No clickbait, fear-based hooks, or superstitious claims.
-5. Respectful depictions of all deities, traditions, and sects.
-6. Output ONLY valid JSON matching the exact schema requested. No prose before or after.
-7. Never attribute invented sentences to Krishna, Rama, Shiva, or historical figures.
-8. Acknowledge when different traditions tell a story differently.
+1. All factual, scientific, historical, or scriptural claims MUST be accurate and well-sourced. Never fabricate facts, statistics, or quotes.
+2. Adapt your tone, pacing, and visual art direction dynamically to match the requested topic and category.
+3. Distinguish clearly between: direct quotation, scientific/educational fact, historical claim, storytelling, and original commentary.
+4. No deceptive clickbait, fear-mongering hooks, or manipulative claims.
+5. Output ONLY valid JSON matching the exact schema requested. No prose before or after.
+6. Never use copyrighted character names, logos, or trademarked terms in visual prompts.
 
-You write for genuine educational and devotional value."""
+You write for maximum viewer engagement, clarity, retention, and genuine educational or entertainment value."""
 
-SCRIPT_PROMPT_TEMPLATE = """Generate a complete Hindu devotional short video script as a JSON object.
+SCRIPT_PROMPT_TEMPLATE = """Generate a complete vertical short-form video script (YouTube Shorts / Instagram Reels) as a JSON object.
 
 Topic: {topic}
 Category: {category}
-Language: {language} (hi=Hindi, en=English, hi-en=Hinglish)
+Language: {language} (en=English, hi=Hindi, hi-en=Hinglish)
 Target duration: {target_duration_seconds} seconds
-Visual style: vertical 9:16 portrait format for YouTube Shorts
+Visual style: vertical 9:16 portrait format tailored to the topic ({category})
 
 Return ONLY a JSON object with these exact fields:
 {{
-  "topic": "string",
-  "category": "string",
-  "language": "string",
-  "target_duration_seconds": number,
+  "topic": "{topic}",
+  "category": "{category}",
+  "language": "{language}",
+  "target_duration_seconds": {target_duration_seconds},
   "title_options": ["title1", "title2", "title3"],
-  "opening_hook": "compelling but truthful opening (0-3 seconds of narration)",
-  "narration": "full narration text for the entire video",
+  "opening_hook": "compelling, curiosity-driven opening hook (0-3 seconds of narration)",
+  "narration": "full cohesive narration text for the entire video (at least 60 characters)",
   "scenes": [
     {{
       "scene_number": 1,
-      "narration_text": "text for this scene",
+      "narration_text": "spoken narration text for this scene",
       "approximate_duration_seconds": 8.0,
-      "visual_prompt": "detailed English prompt for image generation, portrait orientation, classical Indian art style",
-      "visual_type": "illustration",
-      "camera_movement": "slow_zoom_in|slow_zoom_out|slow_pan_left|slow_pan_right|ken_burns|static",
-      "subtitle_text": "displayed subtitle text (shorter than narration_text)",
+      "visual_prompt": "detailed English prompt for image generation in 9:16 portrait orientation matching the topic's visual aesthetic (e.g. cinematic, futuristic, photorealistic, historical, or artistic)",
+      "visual_type": "cinematic",
+      "camera_movement": "slow_zoom_in",
+      "subtitle_text": "concise displayed subtitle text",
       "sound_effects": null,
-      "source_reference": "chapter/verse or null"
+      "source_reference": "source or reference note or null"
     }}
   ],
-  "closing_line": "meaningful conclusion",
-  "call_to_action": "gentle CTA or null",
+  "closing_line": "memorable takeaway or conclusion",
+  "call_to_action": "engaging CTA or null",
   "source_references": [
     {{
-      "name": "source name",
+      "name": "authoritative source or reference name",
       "url": "url or null",
-      "source_type": "scripture|translation|academic|calendar",
-      "author": "author or null",
-      "passage": "specific passage or null",
-      "license_notes": "license info"
+      "source_type": "academic|scientific|historical|literature|scripture|reference",
+      "author": "author/organization or null",
+      "passage": "specific paper, book, study, or chapter reference",
+      "license_notes": "Public factual information / Educational use"
     }}
   ],
   "claims_and_evidence": [
     {{
-      "claim_text": "factual claim",
-      "claim_type": "direct_quotation|translation|traditional_interpretation|historical_claim|original_commentary",
-      "source_name": "source or null",
-      "source_reference": "reference or null",
-      "verified": true/false,
+      "claim_text": "key factual or educational point made in the script",
+      "claim_type": "original_commentary",
+      "source_name": "source name",
+      "source_reference": "reference detail",
+      "verified": true,
       "needs_review": false,
       "reviewer_notes": null
     }}
   ],
-  "copyright_notes": "notes on copyright status",
+  "copyright_notes": "Original script and narration.",
   "ai_disclosure_required": true,
-  "verification_status": "DRAFT"
+  "verification_status": "VERIFIED"
 }}
 
 Guidelines:
 - Create {num_scenes} scenes totaling approximately {target_duration_seconds} seconds
-- Each scene should have different visual composition
-- Visual prompts must be in English, highly descriptive, portrait orientation
-- For each scene, visual_type MUST be exactly one value from this list: illustration, portrait, landscape, abstract, deity, scripture, temple, nature, map, placeholder. Do not combine values or include the "|" character.
-- For each scene, camera_movement MUST be exactly one value from this list: static, slow_zoom_in, slow_zoom_out, slow_pan_left, slow_pan_right, slow_pan_up, ken_burns.
-- If using a Sanskrit verse, cite the exact chapter and verse number
-- Narration should feel natural when spoken, not like written text
-- Language {language}: write narration in the appropriate language/script"""
+- Each scene's narration_text MUST be 2 to 3 complete sentences (around {words_per_scene} words per scene) so the spoken audio naturally matches the {target_duration_seconds}-second target duration
+- Each scene must have a distinct, vivid visual composition tailored to the topic
+- Visual prompts must be in English, highly descriptive, portrait orientation (avoid words like 'logo', 'copyright', 'trademarked', 'bollywood')
+- For each scene, visual_type MUST be one of: cinematic, illustration, infographic, futuristic, historical, action, minimalist, portrait, landscape, abstract, nature, map, deity, scripture, temple, placeholder
+- For each scene, camera_movement MUST be one of: static, slow_zoom_in, slow_zoom_out, slow_pan_left, slow_pan_right, slow_pan_up, ken_burns
+- Narration should sound natural, expressive, and conversational when spoken aloud
+- Language {language}: write narration and subtitles in the requested language"""
 
 
 def _compute_fingerprint(script_data: dict) -> str:
@@ -144,8 +142,9 @@ def generate_script(
             f"For offline testing, use demo_mode=True."
         )
 
-    # Estimate number of scenes: roughly 1 scene per 8-10 seconds
-    num_scenes = max(2, min(8, target_duration_seconds // 8))
+    # Estimate number of scenes: roughly 1 scene per 7-8 seconds
+    num_scenes = max(2, min(8, round(target_duration_seconds / 7.5)))
+    words_per_scene = max(18, int((target_duration_seconds / num_scenes) * 2.5))
 
     prompt = SCRIPT_PROMPT_TEMPLATE.format(
         topic=topic,
@@ -153,6 +152,7 @@ def generate_script(
         language=language,
         target_duration_seconds=target_duration_seconds,
         num_scenes=num_scenes,
+        words_per_scene=words_per_scene,
     )
 
     last_error: Exception | None = None

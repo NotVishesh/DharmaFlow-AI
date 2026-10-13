@@ -50,6 +50,17 @@ class ApprovalStatus(str, PyEnum):
 
 
 class ContentCategory(str, PyEnum):
+    GENERAL = "general"
+    TECH_AI = "tech_ai"
+    SCIENCE_SPACE = "science_space"
+    MOTIVATION_MINDSET = "motivation_mindset"
+    HISTORY_CULTURE = "history_culture"
+    FINANCE_BUSINESS = "finance_business"
+    STORYTELLING = "storytelling"
+    FACTS_TRIVIA = "facts_trivia"
+    HEALTH_PSYCHOLOGY = "health_psychology"
+    PHILOSOPHY_WISDOM = "philosophy_wisdom"
+    # Legacy / Devotional categories (retained for full compatibility)
     SCRIPTURE_EXPLAINER = "scripture_explainer"
     EPIC_STORYTELLING = "epic_storytelling"
     DEVOTIONAL_REFLECTION = "devotional_reflection"
