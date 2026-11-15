@@ -63,7 +63,7 @@ def download_video_weights():
     import hashlib
     from huggingface_hub import HfApi, snapshot_download
     install_state.update(status='downloading', message='Checking model files and resuming downloads…')
-    info = HfApi().model_info(settings.VIDEO_MODEL_ID, files_metadata=True)
+    info = HfApi().model_info(settings.VIDEO_MODEL_ID, revision=settings.VIDEO_MODEL_REVISION, files_metadata=True)
     files = [f for f in info.siblings if f.rfilename.endswith(('.json', '.safetensors', '.model', '.txt'))]
     required = sum(f.size or 0 for f in files)
     existing = sum((settings.VIDEO_MODEL_DIR/f.rfilename).stat().st_size for f in files if (settings.VIDEO_MODEL_DIR/f.rfilename).exists())

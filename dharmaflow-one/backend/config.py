@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     PORT: int = 8000
     VIDEO_PROVIDER: Literal['local', 'fal', 'local_then_fal'] = 'local'
     VIDEO_MODEL_ID: str = 'Wan-AI/Wan2.1-T2V-1.3B-Diffusers'
+    VIDEO_MODEL_REVISION: str = '0fad780a534b6463e45facd96134c9f345acfa5b'
     VIDEO_MODEL_DIR: Path = MODELS_DIR / 'wan-2.1-1.3b'
     VIDEO_STEPS: int = Field(default=30, ge=10, le=60)
     VIDEO_OFFLOAD: Literal['resident', 'sequential'] = 'resident'

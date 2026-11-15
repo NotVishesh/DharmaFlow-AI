@@ -25,6 +25,6 @@ export default defineConfig({
     cwd: path.resolve(__dirname, '../..'),
     url: 'http://127.0.0.1:5173',
     reuseExistingServer: !process.env.CI,
-    timeout: 30000,
+    timeout: 120000,
   },
 });
