@@ -2,6 +2,15 @@
 
 # ── Secrets ───────────────────────────────────────────────────────────────────
 .env
+.env.*
+!.env.example
+**/client_secrets.json
+**/youtube_token.json
+*.sqlite
+*.sqlite3
+*.db
+*.db-shm
+*.db-wal
 config/client_secret.json
 config/youtube_token.json
 config/instagram_token.json
@@ -67,3 +76,15 @@ htmlcov/
 *.log
 *.tmp
 *.bak
+
+# DharmaFlow One runtime files
+dharmaflow-one/backend/media/
+dharmaflow-one/backend/data/
+dharmaflow-one/backend/client_secrets.json
+node_modules/
+test-results/
+playwright-report/
+
+# Pinned upstream lip-sync checkout, installed by backend/scripts/install_lipsync.py
+dharmaflow-one/backend/vendor/
+.venv-*/

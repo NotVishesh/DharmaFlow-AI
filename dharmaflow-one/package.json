@@ -1,0 +1,36 @@
+{
+  "name": "dharmaflow-one",
+  "version": "1.0.0",
+  "description": "DharmaFlow One - Automated Short-Form Video Factory",
+  "main": "dist/electron/main.js",
+  "scripts": {
+    "dev": "vite --config frontend/vite.config.ts",
+    "build:frontend": "vite build --config frontend/vite.config.ts",
+    "build:electron": "tsc -p electron/tsconfig.json",
+    "build": "npm run build:frontend && npm run build:electron",
+    "start": "electron .",
+    "test:e2e": "playwright test -c frontend/e2e/playwright.config.ts"
+  },
+  "dependencies": {
+    "axios": "^1.7.7",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.453.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwind-merge": "^2.5.4",
+    "zustand": "^5.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.1",
+    "@types/node": "^22.7.5",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.2",
+    "autoprefixer": "^10.4.20",
+    "electron": "^33.0.0",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.13",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.8"
+  }
+}

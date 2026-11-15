@@ -1,0 +1,8 @@
+diffusers==0.35.2
+transformers>=4.49,<5
+accelerate>=1.2,<2
+safetensors>=0.4.5
+sentencepiece>=0.2
+ftfy>=6.3
+imageio[ffmpeg]>=2.35
+filelock>=3.16,<4

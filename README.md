@@ -1,3 +1,33 @@
+> **Current desktop application:** [DharmaFlow One](dharmaflow-one/README.md). The sections below the quick start document the older application.
+
+## Clone and run (Windows 10/11)
+
+After cloning, run this single command from the repository root:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\Start-DharmaFlow.ps1
+```
+
+Or clone and start in one PowerShell line (Git must already be installed):
+
+```powershell
+git clone https://github.com/NotVishesh/DharmaFlow-AI.git; if ($LASTEXITCODE -eq 0) { Set-Location DharmaFlow-AI; powershell -NoProfile -ExecutionPolicy Bypass -File .\Start-DharmaFlow.ps1 }
+```
+
+The launcher installs missing Git, Node.js, FFmpeg, Ollama and Python 3.12 through winget; creates an isolated Python environment; installs CUDA PyTorch and application dependencies; restores Wan video, Qwen speech, MuseTalk and SyncNet models; starts Ollama; builds and launches Electron. Windows may show installer/UAC prompts. Microsoft App Installer (winget), an NVIDIA CUDA-compatible driver, an internet connection for the first install, and roughly **60 GB free disk space** are prerequisites. Downloads are large and the first run can take a long time. Rerun the same command after an interruption; downloaded model files are reused.
+
+Subsequent launches reuse installed dependencies and weights. No paid generation API key is required. OAuth credentials are only needed if you separately configure YouTube publishing. Online speech fallbacks are available when local speech fails. Model weights follow their upstream licenses and are downloaded rather than included in this repository.
+
+This restores the **current Wan 2.1 / MuseTalk implementation**, including its quality limitations. It does not include a completed LTX/ComfyUI upgrade or promise the cinematic quality of the reference Short. Generated videos, project databases, credentials, environments, model weights and experimental vendor checkouts are not stored in GitHub. A fresh clone starts with an empty project library. Old sample scripts may require their original input media.
+
+For dependency/build verification without downloading models or opening the app:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\Start-DharmaFlow.ps1 -SkipModels -NoLaunch
+```
+
+NVIDIA drivers remain an operating-system prerequisite; the launcher does not change drivers. Other operating systems do not have an automated installer in this release.
+
 # DharmaFlow AI — End-to-End Automated Hindu Devotional Shorts Factory
 
 DharmaFlow AI is an automated, local-first production pipeline that creates original Hindu devotional, scriptural, and educational short-form vertical videos (1080×1920 MP4) for YouTube Shorts and Instagram Reels. 
