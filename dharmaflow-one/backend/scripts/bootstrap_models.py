@@ -1,6 +1,7 @@
 """Restore local models without generation API keys."""
 import asyncio
 import subprocess
+import httpx
 from huggingface_hub import snapshot_download
 from backend.config import settings
 from backend.services.setup_service import local_weights_ready, download_video_weights
@@ -17,13 +18,19 @@ def main():
     import torch
     if not torch.cuda.is_available():
         raise RuntimeError('Local video requires an NVIDIA CUDA GPU and driver. Install the NVIDIA driver and retry.')
-    subprocess.run(['ollama', 'pull', settings.OLLAMA_MODEL], check=True)
+    response = httpx.get(settings.OLLAMA_URL.rstrip('/') + '/api/tags', timeout=10)
+    response.raise_for_status()
+    if settings.OLLAMA_MODEL not in {m['name'] for m in response.json()['models']}:
+        subprocess.run(['ollama', 'pull', settings.OLLAMA_MODEL], check=True)
     if not local_weights_ready():
         download_video_weights()
     if not lipsync_ready():
         install_lipsync()
     install_syncnet()
-    snapshot_download('Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice')
+    try:
+        snapshot_download('Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice', local_files_only=True)
+    except FileNotFoundError:
+        snapshot_download('Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice')
     asyncio.run(database())
     print('Models and database ready. Subsequent starts reuse downloaded files.')
 

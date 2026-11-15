@@ -1,6 +1,6 @@
 # Core CUDA torch installation is shared with video inference; do not replace it.
 # Install requirements-video.txt first.
-opencv-python>=4.8,<5
+opencv-contrib-python>=4.8,<5
 librosa>=0.10,<2
 einops>=0.7,<1
 filelock>=3.16,<4
