@@ -1,8 +1,8 @@
 > **Current desktop application:** [DharmaFlow One](dharmaflow-one/README.md). The sections below the quick start document the older application.
 
-## Clone and run (Windows 10/11)
+## Quick start after cloning (Windows 10/11)
 
-After cloning, run this single command from the repository root:
+Open PowerShell in the cloned `DharmaFlow-AI` folder (the one containing `Start-DharmaFlow.ps1`). Copy and run:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\Start-DharmaFlow.ps1
