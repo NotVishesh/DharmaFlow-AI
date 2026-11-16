@@ -12,6 +12,7 @@ def main():
     for module in ('backend.main', 'torch', 'torchvision', 'torchaudio', 'diffusers',
                    'transformers', 'accelerate', 'mediapipe', 'qwen_tts', 'cv2',
                    'librosa', 'einops', 'python_speech_features'):
+        print(f'Checking {module}...', flush=True)
         importlib.import_module(module)
     print('Application imports and required commands passed.')
 

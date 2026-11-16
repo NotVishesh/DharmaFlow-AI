@@ -45,13 +45,13 @@ if (-not (Test-Path -LiteralPath $py)) {
 }
 Push-Location -LiteralPath $projectDir
 try {
-    $requirements = @('backend/requirements.txt','backend/requirements-video.txt','backend/requirements-lipsync.txt','backend/requirements-desktop.txt')
+    $requirements = @('backend/requirements.txt','backend/requirements-video.txt','backend/requirements-lipsync.txt','backend/requirements-desktop.txt','backend/requirements-windows.lock')
     $fingerprint = ($requirements | ForEach-Object { (Get-FileHash -LiteralPath $_ -Algorithm SHA256).Hash }) -join ''
     $marker = Join-Path $PSScriptRoot '.venv\dharmaflow-dependencies.txt'
     if (-not (Test-Path -LiteralPath $marker) -or (Get-Content -Raw -LiteralPath $marker).Trim() -ne $fingerprint) {
         Run-Checked $py @('-m','pip','install','--upgrade','pip')
         Run-Checked $py @('-m','pip','install','torch==2.5.1','torchvision==0.20.1','torchaudio==2.5.1','--index-url','https://download.pytorch.org/whl/cu121')
-        Run-Checked $py @('-m','pip','install','-r','backend/requirements.txt','-r','backend/requirements-video.txt','-r','backend/requirements-lipsync.txt','-r','backend/requirements-desktop.txt')
+        Run-Checked $py @('-m','pip','install','-c','backend/requirements-windows.lock','-r','backend/requirements.txt','-r','backend/requirements-video.txt','-r','backend/requirements-lipsync.txt','-r','backend/requirements-desktop.txt')
         Run-Checked $py @('-m','pip','check')
         Set-Content -LiteralPath $marker -Value $fingerprint
     }
